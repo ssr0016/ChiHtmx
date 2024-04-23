@@ -1,0 +1,29 @@
+<html>
+    <head>
+        <title>HTMX CRUD</title>
+        <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+        
+        <style>
+            h1 {
+                text-align: center;
+            }
+            .box {
+                padding: 1em;
+                margin: 1em;
+                border: 1px solid #ccc;
+            }
+        </style>
+
+    </head>
+    <body>
+        <h1>HTMX PRACTICE</h1>
+
+        <div id="user-info" class="box">
+            <p>Test</p>
+        </div>
+
+        <button hx-get="/user-info" hx-target="#user-info" hx-swap="innerHTML">
+            Click Me
+        </button>
+    </body>
+</html>
