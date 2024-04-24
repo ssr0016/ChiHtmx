@@ -33,7 +33,12 @@ func main() {
 	r.Route("/post/{id}", func(r chi.Router) {
 		r.Use(middlewares.PostCtx)
 
-		// r.Get("/", getPostHandler)
+		// post object fetched in the PostCtx middleware. Handlers can perform its own specific set of actions.
+		r.Get("/", getPostHandler)
+
+		r.Get("/edit", editPostHandler)
+		r.Post("/edit", editPostHandler)
+
 	})
 
 	http.ListenAndServe(":3000", r)
@@ -54,6 +59,19 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func userInfoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User Info from API Server"))
+}
+
+func getPostHandler(w http.ResponseWriter, r *http.Request) {
+	post := r.Context().Value("post")
+
+	t, _ := template.ParseFiles("template/pages/post_detail.html")
+
+	ctx := make(map[string]interface{})
+	ctx["post"] = post
+	err := t.Execute(w, ctx)
+	if err != nil {
+		log.Println("Error executing template:", err)
+	}
 }
 
 func postHandler(w http.ResponseWriter, r *http.Request) {
@@ -94,10 +112,90 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 func createPostHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := make(map[string]interface{})
 
-	t, _ := template.ParseFiles("template/post_from.html")
+	// post part
+	if r.Method == "POST" {
+		r.ParseForm()
+		title := r.PostForm.Get("title")
+		description := r.PostForm.Get("description")
+
+		stmt := "INSERT INTO posts (title, description) VALUES ($1, $2)"
+		q, err := database.DBConn.Prepare(stmt)
+		if err != nil {
+			log.Println(err)
+		}
+
+		res, err := q.Exec(title, description)
+		if err != nil {
+			log.Println(err)
+		}
+
+		rowsAffected, _ := res.RowsAffected()
+
+		if rowsAffected == 1 {
+			ctx["success"] = "Post created successfully!"
+		}
+
+		log.Println("Rows affected - ", rowsAffected)
+	}
+
+	t, _ := template.ParseFiles("template/pages/post_form.html")
 
 	err := t.Execute(w, ctx)
 	if err != nil {
 		log.Println("Error executing template:", err)
 	}
+}
+
+func editPostHandler(w http.ResponseWriter, r *http.Request) {
+
+	ctx := make(map[string]interface{})
+	p := r.Context().Value("post")
+
+	post := p.(model.Post)
+
+	// Post Part
+
+	if r.Method == "POST" {
+
+		r.ParseForm()
+
+		title := r.PostForm.Get("title")
+		description := r.PostForm.Get("description")
+
+		stmt := "UPDATE posts set title=$1, description=$2 where id=$3"
+
+		query, err := database.DBConn.Prepare(stmt)
+
+		if err != nil {
+			log.Println(err)
+		}
+
+		res, err := query.Exec(title, description, post.Id)
+
+		if err != nil {
+			log.Println(err)
+		}
+
+		rowsAffected, _ := res.RowsAffected()
+
+		if rowsAffected == 1 {
+			ctx["success"] = "Post successully updated."
+		}
+
+		log.Println(rowsAffected)
+
+	}
+
+	// Get Part
+
+	// Load template
+	t, _ := template.ParseFiles("templates/pages/post_form.html")
+
+	ctx["post"] = post
+	err := t.Execute(w, ctx)
+
+	if err != nil {
+		log.Println("Error in tpl execution", err)
+	}
+
 }

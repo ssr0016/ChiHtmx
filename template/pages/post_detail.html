@@ -1,5 +1,10 @@
 <div>
     <h3 class="text-center font-bold">{{.post.Title}}</h3>
+
+    <div class="mt-6">
+        <button class="p-2 m-2 border-2 border-black border-lime-500 rounded hover:border-gray-400" 
+            hx-get="/post/{{.post.Id}}/edit" hx-target="#content-container" hx-swap="innerHTML">Edit
+        </button>
     <div>{{.post.Description}}</div>
 </div>
 

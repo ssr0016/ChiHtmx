@@ -2,11 +2,20 @@
     
     <h3 class="text-center font-bold">{{.heading}}</h3>
 
+    <div>
+        <button class="p-2 m-2 border-2 border-black border-lime-500 rounded hover:border-gray-400" 
+            hx-get="/post/create" hx-target="#content-container" hx-swap="innerHTML">Create New Post
+        </button>
+    </div>
+
     <ul>
         {{range .posts}}
-        
-        <li>{{.Id}} - {{.Title}}</li>
-        {{end}}
-    </ul>
 
+        <li>{{.Id}} - <span
+             class="text-blue-600 hover:cursor-pointer hover:text-yellow-500 active:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300" 
+             hx-get="/post/{{.Id}}" hx-target="#content-container" hx-swap="innerHTML">
+            {{.Title}}</span></li>
+            {{end}}
+    </ul>
+    
 </div>
